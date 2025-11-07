@@ -1,0 +1,11 @@
+{
+  "name": "metar",
+  "version": "0.1.0",
+  "build": {
+    "srcDir": "src",
+    "includeDir": "include",
+    "srcFilter": [
+      "+<*>"
+    ]
+  }
+}
