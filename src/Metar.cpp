@@ -163,6 +163,21 @@ namespace
   {
     return starts_with("T####", str);
   }
+
+  // RERA, REFZDZ, RESHSN, RETSRA ...
+  inline bool is_recent(const char *str)
+  {
+    return str[0] == 'R' && str[1] == 'E' && isalpha(str[2]) && isalpha(str[3]);
+  }
+
+  // QFE745, QFE745/0994, QFE745/994
+  inline bool is_qfe(const char *str)
+  {
+    return starts_with("QFE###", str)
+        && (str[6] == '\0' || (str[6] == '/' && isdigit(str[7])));
+  }
+
+  const char *DELIMITERS = " \t\r\n";
     
   inline int temp(char *val)
   {
@@ -301,6 +316,40 @@ public:
     return *_default_phenom;
   }
 
+  unsigned int NumRecentPhenomena() const override
+  {
+    return _recent.size();
+  }
+
+  const Phenom& RecentPhenomenon(unsigned int idx) const override
+  {
+    if (idx < NumRecentPhenomena())
+    {
+      return *_recent[idx];
+    }
+
+    return *_default_phenom;
+  }
+
+  unsigned int NumRunwayStates() const override
+  {
+    return _runways.size();
+  }
+
+  const RunwayState *RunwayStateAt(unsigned int idx) const override
+  {
+    if (idx < NumRunwayStates())
+    {
+      return &_runways[idx];
+    }
+
+    return nullptr;
+  }
+
+  std::optional<int> QFEmmHg() const override { return _qfe_mmhg; }
+
+  std::optional<int> QFEhPa() const override { return _qfe_hpa; }
+
 private:
   MetarImpl();
 
@@ -333,6 +382,12 @@ private:
 
   void parse_phenom(const char *str);
 
+  bool parse_recent(const char *str);
+
+  bool parse_runway_state(const char *str);
+
+  void parse_qfe(const char *str);
+
   std::optional<message_type> _message_type;
 
   std::optional<std::string> _icao;
@@ -358,6 +413,13 @@ private:
   std::vector<std::shared_ptr<Clouds>> _layers;
 
   std::vector<std::shared_ptr<Phenom>> _phenomena;
+
+  std::vector<std::shared_ptr<Phenom>> _recent;
+
+  std::vector<RunwayState> _runways;
+
+  std::optional<int> _qfe_mmhg;
+  std::optional<int> _qfe_hpa;
 
   std::optional<int> _vert_vis;
 
@@ -422,9 +484,16 @@ void MetarImpl::parse(const char *metar_str)
 void MetarImpl::parse(char *metar_str)
 {
   char *sp;
-  char *el = strtok_r(metar_str, " ", &sp);
+  char *el = strtok_r(metar_str, DELIMITERS, &sp);
   while (el)
   {
+    // Some feeds end the report with '=': "... NOSIG="
+    size_t len = strlen(el);
+    if (len > 1 && el[len - 1] == '=')
+    {
+      el[len - 1] = '\0';
+    }
+
     if (!_message_type.has_value() && is_message_type(el))
     {
       parse_message_type(el);
@@ -481,6 +550,16 @@ void MetarImpl::parse(char *metar_str)
     {
       parse_tempNA(el);
     }
+    else if (_rmk && !_qfe_mmhg.has_value() && is_qfe(el))
+    {
+      parse_qfe(el);
+    }
+    else if (!_rmk && is_recent(el) && parse_recent(el))
+    {
+    }
+    else if (!_rmk && parse_runway_state(el))
+    {
+    }
     else if (!_rmk)
     {
       parse_cloud_layer(el);
@@ -489,7 +568,7 @@ void MetarImpl::parse(char *metar_str)
 
     _previous_element = el;
 
-    el = strtok_r(nullptr, " ", &sp);
+    el = strtok_r(nullptr, DELIMITERS, &sp);
   }
 }
 
@@ -696,5 +775,42 @@ void MetarImpl::parse_tempNA(const char *str)
     strncpy(val, str + 5, 4);
     val[4] = '\0';
     _fdew = tempNA(val);
+  }
+}
+
+bool MetarImpl::parse_recent(const char *str)
+{
+  auto p = Phenom::Create(str + 2, false);
+
+  if (p != nullptr)
+  {
+    _recent.push_back(p);
+    return true;
+  }
+
+  return false;
+}
+
+bool MetarImpl::parse_runway_state(const char *str)
+{
+  auto rs = RunwayState::Parse(str);
+
+  if (rs.has_value())
+  {
+    _runways.push_back(*rs);
+    return true;
+  }
+
+  return false;
+}
+
+void MetarImpl::parse_qfe(const char *str)
+{
+  _qfe_mmhg = atoi(str + 3);
+
+  const char *p = strchr(str, '/');
+  if (p)
+  {
+    _qfe_hpa = atoi(p + 1);
   }
 }

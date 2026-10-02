@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iterator>   // std::size
 
 using namespace Storage_B::Weather;
 

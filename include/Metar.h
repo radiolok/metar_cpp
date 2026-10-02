@@ -8,6 +8,9 @@
 
 #include <memory>
 #include <optional>
+#include <string>
+
+#include "RunwayState.h"
 
 namespace Storage_B
 {
@@ -397,6 +400,48 @@ namespace Storage_B
        * @return A constant reference to the Phenom object at the specified index.
        */
       virtual const Phenom& Phenomenon(unsigned int idx) const = 0;
+
+      /**
+       * @brief Number of recent weather groups (RERA, REFZDZ, RESHSN ...).
+       *
+       * Recent weather is weather of operational significance observed since
+       * the previous report but not at the time of observation. It is kept
+       * apart from Phenomenon() so that RERA is not mistaken for current rain.
+       */
+      virtual unsigned int NumRecentPhenomena() const = 0;
+
+      /**
+       * @brief Recent weather group by index, without the "RE" prefix.
+       *
+       * @param idx The zero-based index.
+       * @return The phenomenon, or an empty one (NumPhenom() == 0) if idx is out of range.
+       */
+      virtual const Phenom& RecentPhenomenon(unsigned int idx) const = 0;
+
+      /**
+       * @brief Number of runway state groups (R24/590235, R88/CLRD62, SNOCLO ...).
+       */
+      virtual unsigned int NumRunwayStates() const = 0;
+
+      /**
+       * @brief Runway state group by index.
+       *
+       * @param idx The zero-based index.
+       * @return Pointer to the decoded state, or nullptr if idx is out of range.
+       */
+      virtual const RunwayState *RunwayStateAt(unsigned int idx) const = 0;
+
+      /**
+       * @brief Station level pressure (QFE) in mmHg from the remarks, e.g. RMK QFE745/0994.
+       *
+       * Reported by stations in Russia and other CIS countries.
+       */
+      virtual std::optional<int> QFEmmHg() const = 0;
+
+      /**
+       * @brief Station level pressure (QFE) in hPa from the remarks, e.g. RMK QFE745/0994.
+       */
+      virtual std::optional<int> QFEhPa() const = 0;
     };
   }
 }

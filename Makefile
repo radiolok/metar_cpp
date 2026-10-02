@@ -9,7 +9,7 @@ CFLAGS = -Wall -I include -std=c++20 -O2
 $(shell mkdir -p $(LIBDIR)) 
 $(shell mkdir -p $(OBJDIR)) 
 
-OBJS = $(OBJDIR)/Metar.o $(OBJDIR)/Clouds.o $(OBJDIR)/Phenom.o $(OBJDIR)/Utils.o
+OBJS = $(OBJDIR)/Metar.o $(OBJDIR)/Clouds.o $(OBJDIR)/Phenom.o $(OBJDIR)/Utils.o $(OBJDIR)/RunwayState.o
 
 $(LIB) : $(OBJS)
 	$(AR) r $(LIB) $(OBJS) 

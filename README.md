@@ -14,6 +14,9 @@ This is a work in progress.  So far, the following have been implemented:
   * Vertical Visibility
   * Pressure
   * Temperature
+  * Recent Weather (RERA, REFZDZ, RESHSN ...), kept apart from current phenomena
+  * Runway State (R24/590235, R88/CLRD62, SNOCLO)
+  * Station Pressure QFE from remarks (RMK QFE745/0994)
 
 Look <a href="https://github.com/jachappell/METAR/blob/master/example/main.cpp">here</a> to see it in action.
 
