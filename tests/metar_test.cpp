@@ -1089,4 +1089,16 @@ BOOST_AUTO_TEST_CASE(real_METAR_10)
   BOOST_CHECK(metar->DewPointNA() == 17.2);
 }
 
+BOOST_AUTO_TEST_CASE(wind_kmh)
+{
+  // ICAO spells kilometres per hour "KMH"; "KPH" is kept for old feeds
+  auto metar = Metar::Create("18015KMH");
+
+  BOOST_CHECK(metar->WindSpeed().value() == 15);
+  BOOST_CHECK(metar->WindSpeedUnits() == Metar::speed_units::KPH);
+
+  metar = Metar::Create("18015KPH");
+  BOOST_CHECK(metar->WindSpeedUnits() == Metar::speed_units::KPH);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

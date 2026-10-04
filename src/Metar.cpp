@@ -23,6 +23,7 @@ namespace
   const char *WIND_SPEED_KT = "KT";
   const char *WIND_SPEED_MPS = "MPS";
   const char *WIND_SPEED_KPH = "KPH";
+  const char *WIND_SPEED_KMH = "KMH"; // ICAO Annex 3 / WMO FM 15 spelling
 
   const char *VIS_UNITS_SM = "SM";
     
@@ -603,7 +604,7 @@ void MetarImpl::parse_wind(const char *str)
   {
     _wind_speed_units = speed_units::MPS;
   }
-  else if (strstr(str, WIND_SPEED_KPH))
+  else if (strstr(str, WIND_SPEED_KPH) || strstr(str, WIND_SPEED_KMH))
   {
     _wind_speed_units = speed_units::KPH;
   }
