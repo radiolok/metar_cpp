@@ -475,9 +475,39 @@ MetarImpl::MetarImpl(char *metar_str) : MetarImpl()
   parse(metar_str);
 }
 
+// strtok_r() is POSIX, not C++; the same contract, also for strict libcs
+static char *next_token(char *str, const char *delims, char **save)
+{
+  char *p = str ? str : *save;
+  if (!p)
+  {
+    return nullptr;
+  }
+  p += strspn(p, delims);
+  if (*p == '\0')
+  {
+    *save = p;
+    return nullptr;
+  }
+  char *end = p + strcspn(p, delims);
+  if (*end != '\0')
+  {
+    *end++ = '\0';
+  }
+  *save = end;
+  return p;
+}
+
 void MetarImpl::parse(const char *metar_str)
 {
-  char *metar_dup = strdup(metar_str);
+  // strdup() is POSIX, not C++: picolibc in strict C++17 mode hides it
+  size_t len = strlen(metar_str) + 1;
+  char *metar_dup = static_cast<char *>(malloc(len));
+  if (!metar_dup)
+  {
+    return;
+  }
+  memcpy(metar_dup, metar_str, len);
   parse(metar_dup);
   free(metar_dup);
 }
@@ -485,7 +515,7 @@ void MetarImpl::parse(const char *metar_str)
 void MetarImpl::parse(char *metar_str)
 {
   char *sp;
-  char *el = strtok_r(metar_str, DELIMITERS, &sp);
+  char *el = next_token(metar_str, DELIMITERS, &sp);
   while (el)
   {
     // Some feeds end the report with '=': "... NOSIG="
@@ -569,7 +599,7 @@ void MetarImpl::parse(char *metar_str)
 
     _previous_element = el;
 
-    el = strtok_r(nullptr, DELIMITERS, &sp);
+    el = next_token(nullptr, DELIMITERS, &sp);
   }
 }
 

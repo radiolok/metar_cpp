@@ -108,17 +108,18 @@ std::shared_ptr<Clouds> Clouds::Create(const char *str, bool tempo)
     }
     else
     {
-      Clouds::type t;
       for (size_t j = 0 ; j < NUM_CLOUDS ; j++)
       {
         if (!strcmp(str + 6, cloud_types[j]))
         {
-          t = static_cast<Clouds::type>(j);
-          break;
+          return std::make_shared<CloudsImpl>(tempo,
+                  static_cast<Clouds::cover>(idx), atoi(str + 3),
+                  static_cast<Clouds::type>(j));
         }
-      } 
+      }
+      // unknown suffix such as "///": the layer without a cloud type
       return std::make_shared<CloudsImpl>(tempo,
-              static_cast<Clouds::cover>(idx), atoi(str + 3), t);
+              static_cast<Clouds::cover>(idx), atoi(str + 3));
     }
   }
 
